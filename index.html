@@ -1,90 +1,658 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple To-Do List</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f4;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-    }
-    #todo-input {
-      width: 70%;
-      padding: 10px;
-      font-size: 16px;
-    }
-    #add-btn {
-      padding: 10px 20px;
-      font-size: 16px;
-    }
-    ul {
-      list-style-type: none;
-      padding: 0;
-      margin-top: 20px;
-    }
-    li {
-      background-color: #fff;
-      padding: 10px;
-      margin-bottom: 5px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-radius: 4px;
-    }
-    .delete-btn {
-      background-color: red;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      cursor: pointer;
-      border-radius: 3px;
-    }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AdsGalaxy · Auto Ad Integration</title>
+
+    <!-- ============================================================
+    HEADER CODE – Loads the AdsGalaxy SDK for mini‑app ID 65
+    ============================================================ -->
+    <script src="https://app.adsgalaxy.online/sdk.js?id=65">
+    </script>
+
+    <style>
+        /* ── clean, modern UI ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(145deg, #f6f9fc 0%, #e9f0f5 100%);
+            padding: 1.5rem;
+        }
+
+        .card {
+            max-width: 600px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            padding: 2.5rem 2rem 2rem;
+            box-shadow:
+                0 20px 60px rgba(0, 20, 40, 0.12),
+                0 6px 20px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #1a2b3e;
+            color: #b6d4fe;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 0.25rem 0.9rem;
+            border-radius: 100px;
+            margin-bottom: 1.25rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #0b1a2a;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.3rem;
+        }
+
+        .sub {
+            color: #4a5f73;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+            border-left: 3px solid #2f7bf6;
+            padding-left: 1rem;
+            background: rgba(47, 123, 246, 0.04);
+            border-radius: 0 6px 6px 0;
+            line-height: 1.5;
+        }
+
+        .status-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+            margin: 1.75rem 0 2rem;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.7rem 1rem;
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.04);
+            transition: background 0.2s;
+        }
+
+        .status-row .label {
+            font-weight: 500;
+            color: #2a4055;
+            font-size: 0.9rem;
+        }
+
+        .status-row .value {
+            font-family: 'SF Mono', 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #1a2b3e;
+            background: white;
+            padding: 0.2rem 0.8rem;
+            border-radius: 100px;
+            border: 1px solid #e2eaf0;
+            max-width: 55%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .status-row .value.pending {
+            color: #a0b8cc;
+            border-color: #dce6ed;
+            background: #f8fafc;
+        }
+
+        .status-row .value.success {
+            color: #0f7b3e;
+            border-color: #b5e6c8;
+            background: #f0faf4;
+        }
+
+        .status-row .value.error {
+            color: #b33a4a;
+            border-color: #f5d0d4;
+            background: #fdf4f5;
+        }
+
+        .status-row .value.completed {
+            color: #1a6bb0;
+            border-color: #b8d6f0;
+            background: #f0f7fe;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .dot.idle {
+            background: #c0d0dd;
+        }
+        .dot.loading {
+            background: #f5b342;
+            animation: pulse-dot 0.9s infinite;
+        }
+        .dot.success {
+            background: #1fa85b;
+        }
+        .dot.error {
+            background: #d44a5a;
+        }
+        .dot.completed {
+            background: #2f7bf6;
+        }
+
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(0.85);
+            }
+        }
+
+        .payload-box {
+            background: #0b1a2a;
+            border-radius: 14px;
+            padding: 1.25rem 1.25rem 1rem;
+            margin: 0.5rem 0 1.75rem;
+            border: 1px solid #1e3349;
+            overflow: hidden;
+        }
+
+        .payload-box .payload-label {
+            color: #7a9bb8;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .payload-box pre {
+            color: #c8dce8;
+            font-family: 'SF Mono', 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin: 0;
+            padding: 0;
+            background: transparent;
+            border: none;
+        }
+
+        .payload-box .highlight-key {
+            color: #f5b342;
+        }
+        .payload-box .highlight-string {
+            color: #8bcb8b;
+        }
+        .payload-box .highlight-number {
+            color: #7fc1f5;
+        }
+        .payload-box .highlight-bool {
+            color: #e38f8f;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.7rem 1.6rem;
+            border-radius: 100px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #eef3f8;
+            color: #1f3a54;
+            flex: 1 1 auto;
+            min-width: 130px;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: #1a2b3e;
+            color: white;
+            box-shadow: 0 4px 14px rgba(26, 43, 62, 0.20);
+        }
+
+        .btn-primary:hover {
+            background: #0f1e2f;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(26, 43, 62, 0.25);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border-color: #c7d8e5;
+            color: #2f4a66;
+        }
+
+        .btn-outline:hover {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: #a0b8cc;
+        }
+
+        .btn-success {
+            background: #0f7b3e;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #0c662f;
+            transform: translateY(-1px);
+        }
+
+        .footnote {
+            margin-top: 2rem;
+            font-size: 0.75rem;
+            color: #6f8aa0;
+            text-align: center;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            padding-top: 1.5rem;
+            letter-spacing: 0.02em;
+        }
+
+        .footnote code {
+            background: rgba(0, 0, 0, 0.04);
+            padding: 0.1rem 0.5rem;
+            border-radius: 6px;
+            font-family: 'SF Mono', monospace;
+            font-size: 0.7rem;
+            color: #1a3a5a;
+        }
+
+        /* responsive */
+        @media (max-width: 480px) {
+            .card {
+                padding: 1.5rem 1rem;
+            }
+            .status-row {
+                flex-wrap: wrap;
+                gap: 0.3rem;
+            }
+            .status-row .value {
+                max-width: 100%;
+                width: 100%;
+                font-size: 0.7rem;
+            }
+            .btn {
+                min-width: 100%;
+            }
+            .payload-box pre {
+                font-size: 0.65rem;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>My To-Do List</h1>
-  <div style="text-align: center;">
-    <input type="text" id="todo-input" placeholder="Enter new task" />
-    <button id="add-btn">Add</button>
-  </div>
-  <ul id="todo-list"></ul>
 
-  <script>
-    const addBtn = document.getElementById('add-btn');
-    const todoInput = document.getElementById('todo-input');
-    const todoList = document.getElementById('todo-list');
+    <div class="card" role="main">
 
-    addBtn.addEventListener('click', () => {
-      const task = todoInput.value.trim();
-      if (task !== "") {
-        const li = document.createElement('li');
-        li.textContent = task;
+        <!-- mini‑app badge -->
+        <div class="badge">⚡ Mini App · ID 65</div>
 
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Delete';
-        deleteBtn.className = 'delete-btn';
+        <h1>AdsGalaxy <span style="font-weight:400;color:#4a6a88;">·</span> Auto Ad</h1>
+        <div class="sub">
+            SDK loaded &amp; ready. Ads will <strong>auto‑trigger</strong> after a short delay.
+            <br />
+            <span style="font-size:0.85rem;color:#5f7d98;">
+                Reward payload is captured and displayed below.
+            </span>
+        </div>
 
-        deleteBtn.addEventListener('click', () => {
-          todoList.removeChild(li);
-        });
+        <!-- ─── STATUS DISPLAY ─── -->
+        <div class="status-grid" id="statusGrid">
+            <div class="status-row">
+                <span class="label">📡 SDK State</span>
+                <span class="value pending" id="sdkState">
+                    <span class="pill">
+                        <span class="dot idle" id="sdkDot"></span>
+                        <span id="sdkText">loading…</span>
+                    </span>
+                </span>
+            </div>
+            <div class="status-row">
+                <span class="label">🎯 Ad Trigger</span>
+                <span class="value pending" id="adState">
+                    <span class="pill">
+                        <span class="dot idle" id="adDot"></span>
+                        <span id="adText">waiting</span>
+                    </span>
+                </span>
+            </div>
+            <div class="status-row">
+                <span class="label">📦 Reward Status</span>
+                <span class="value pending" id="rewardState">
+                    <span class="pill">
+                        <span class="dot idle" id="rewardDot"></span>
+                        <span id="rewardText">—</span>
+                    </span>
+                </span>
+            </div>
+            <div class="status-row">
+                <span class="label">🆔 Request ID</span>
+                <span class="value pending" id="requestIdDisplay">—</span>
+            </div>
+        </div>
 
-        li.appendChild(deleteBtn);
-        todoList.appendChild(li);
-        todoInput.value = "";
-      }
-    });
+        <!-- ─── REWARD PAYLOAD (raw) ─── -->
+        <div class="payload-box" id="payloadBox">
+            <div class="payload-label">📨 Reward Callback Payload</div>
+            <pre id="payloadContent">{
+            <span class="highlight-key">"status"</span>: <span class="highlight-string">"waiting…"</span>
+            }</pre>
+        </div>
 
-    // Optional: add task on Enter key press
-    todoInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        addBtn.click();
-      }
-    });
-  </script>
+        <!-- ─── ACTION BUTTONS ─── -->
+        <div class="btn-group">
+            <button class="btn btn-primary" id="triggerBtn">
+                ▶ Trigger Ad Now
+            </button>
+            <button class="btn btn-outline" id="resetBtn">
+                ↺ Reset
+            </button>
+        </div>
+
+        <div class="footnote">
+            <code>window.showAdsGalaxy()</code> · auto‑invoked after 1.5s · reward callback handled
+        </div>
+    </div>
+
+    <!-- ============================================================
+    BODY CODE – Auto‑trigger logic + reward handling
+    ============================================================ -->
+    <script>
+        (function() {
+            'use strict';
+
+            // ─── DOM refs ──────────────────────────────────────────────
+            const sdkStateEl = document.getElementById('sdkState');
+            const sdkDot = document.getElementById('sdkDot');
+            const sdkText = document.getElementById('sdkText');
+
+            const adStateEl = document.getElementById('adState');
+            const adDot = document.getElementById('adDot');
+            const adText = document.getElementById('adText');
+
+            const rewardStateEl = document.getElementById('rewardState');
+            const rewardDot = document.getElementById('rewardDot');
+            const rewardText = document.getElementById('rewardText');
+
+            const requestIdDisplay = document.getElementById('requestIdDisplay');
+            const payloadContent = document.getElementById('payloadContent');
+
+            const triggerBtn = document.getElementById('triggerBtn');
+            const resetBtn = document.getElementById('resetBtn');
+
+            // ─── internal state ──────────────────────────────────────
+            let isAdRunning = false;
+            let lastRequestId = null;
+            let lastPayload = null;
+
+            // ─── helpers: update UI ─────────────────────────────────
+            function setSdkState(label, dotClass, text) {
+                sdkStateEl.className = 'value ' + label;
+                sdkDot.className = 'dot ' + dotClass;
+                sdkText.textContent = text;
+            }
+
+            function setAdState(label, dotClass, text) {
+                adStateEl.className = 'value ' + label;
+                adDot.className = 'dot ' + dotClass;
+                adText.textContent = text;
+            }
+
+            function setRewardState(label, dotClass, text) {
+                rewardStateEl.className = 'value ' + label;
+                rewardDot.className = 'dot ' + dotClass;
+                rewardText.textContent = text;
+            }
+
+            function setRequestId(id) {
+                requestIdDisplay.textContent = id || '—';
+                requestIdDisplay.className = 'value ' + (id ? 'success' : 'pending');
+            }
+
+            function renderPayload(payload) {
+                if (!payload) {
+                    payloadContent.innerHTML =
+                        `{\n  <span class="highlight-key">"status"</span>: <span class="highlight-string">"waiting…"</span>\n}`;
+                    return;
+                }
+                const json = JSON.stringify(payload, null, 2);
+                // simple syntax highlight (just enough)
+                const highlighted = json
+                    .replace(/"([^"]+)":/g, '<span class="highlight-key">"$1"</span>:')
+                    .replace(/: "([^"]+)"/g, ': <span class="highlight-string">"$1"</span>')
+                    .replace(/: (\d+)/g, ': <span class="highlight-number">$1</span>')
+                    .replace(/: (true|false)/g, ': <span class="highlight-bool">$1</span>');
+                payloadContent.innerHTML = highlighted;
+            }
+
+            // ─── core: showAdsGalaxy() with robust handling ──────
+            function triggerAd() {
+                if (isAdRunning) {
+                    console.warn('[AdsGalaxy] Ad already in progress.');
+                    return;
+                }
+
+                // Check SDK availability
+                if (typeof window.showAdsGalaxy !== 'function') {
+                    setAdState('error', 'error', 'SDK not ready');
+                    console.error('[AdsGalaxy] SDK not loaded – window.showAdsGalaxy is not a function.');
+                    return;
+                }
+
+                isAdRunning = true;
+                triggerBtn.disabled = true;
+                setAdState('loading', 'loading', 'requesting…');
+
+                console.log('[AdsGalaxy] 🔄 Calling showAdsGalaxy() …');
+
+                // ── call the SDK ──
+                window.showAdsGalaxy()
+                    .then(function(result) {
+                        // result.request_id – send to your backend
+                        const reqId = result && result.request_id ? result.request_id : null;
+                        lastRequestId = reqId;
+                        setRequestId(reqId || '—');
+
+                        if (reqId) {
+                            setAdState('success', 'success', '✅ completed');
+                            console.log('[AdsGalaxy] ✅ Ad completed. request_id:', reqId);
+                            console.log('[AdsGalaxy] → Send this request_id to your backend:', reqId);
+                        } else {
+                            setAdState('success', 'success', '✅ done');
+                            console.log('[AdsGalaxy] ✅ Ad completed (no request_id returned).');
+                        }
+
+                        // Build a synthetic payload for display
+                        const payload = {
+                            event_id: 'rwe_' + Date.now().toString(36),
+                            request_id: reqId || 'req_' + Date.now().toString(36),
+                            mini_app_id: 65,
+                            user_id: '123456789',
+                            status: 'completed',
+                            completed_at: new Date().toISOString()
+                        };
+                        lastPayload = payload;
+                        renderPayload(payload);
+
+                        setRewardState('completed', 'completed', '✅ completed');
+                        rewardText.textContent = 'completed';
+
+                        // ── IMPORTANT: Do NOT credit a valuable wallet here ──
+                        // Only use result.request_id for server-side verification.
+                        // See: https://docs.adsgalaxy.online/verify-rewards
+
+                    })
+                    .catch(function(error) {
+                        console.error('[AdsGalaxy] ❌ Error:', error.code, error.message);
+                        setAdState('error', 'error', '❌ error');
+                        adText.textContent = error.message || 'ad failed';
+
+                        setRewardState('error', 'error', '❌ failed');
+                        rewardText.textContent = error.code || 'error';
+
+                        // show error in payload
+                        const errPayload = {
+                            status: 'error',
+                            code: error.code || 'unknown',
+                            message: error.message || 'Ad request failed',
+                            timestamp: new Date().toISOString()
+                        };
+                        lastPayload = errPayload;
+                        renderPayload(errPayload);
+                    })
+                    .finally(function() {
+                        isAdRunning = false;
+                        triggerBtn.disabled = false;
+                    });
+            }
+
+            // ─── auto‑trigger after SDK load ──────────────────────
+            function scheduleAutoTrigger() {
+                // Wait a moment for the SDK to fully initialise
+                const delay = 1500; // 1.5s
+
+                // Check if SDK is already available
+                if (typeof window.showAdsGalaxy === 'function') {
+                    setSdkState('success', 'success', '✅ ready');
+                    console.log('[AdsGalaxy] SDK ready – auto‑trigger in ' + (delay / 1000) + 's');
+                    setTimeout(function() {
+                        triggerAd();
+                    }, delay);
+                    return;
+                }
+
+                // Otherwise poll for SDK availability
+                setSdkState('loading', 'loading', 'loading SDK…');
+                let attempts = 0;
+                const maxAttempts = 20;
+                const pollInterval = 300;
+
+                const pollSdk = setInterval(function() {
+                    attempts++;
+                    if (typeof window.showAdsGalaxy === 'function') {
+                        clearInterval(pollSdk);
+                        setSdkState('success', 'success', '✅ ready');
+                        console.log('[AdsGalaxy] SDK ready (polled) – auto‑trigger in ' + (delay / 1000) + 's');
+                        setTimeout(function() {
+                            triggerAd();
+                        }, delay);
+                        return;
+                    }
+                    if (attempts >= maxAttempts) {
+                        clearInterval(pollSdk);
+                        setSdkState('error', 'error', '❌ SDK timeout');
+                        console.error('[AdsGalaxy] SDK failed to load within timeout.');
+                        // Still allow manual trigger via button
+                    }
+                }, pollInterval);
+            }
+
+            // ─── reset UI (without reloading) ─────────────────────
+            function resetUI() {
+                if (isAdRunning) return;
+
+                setAdState('pending', 'idle', 'waiting');
+                setRewardState('pending', 'idle', '—');
+                setRequestId(null);
+                lastRequestId = null;
+                lastPayload = null;
+                renderPayload(null);
+                triggerBtn.disabled = false;
+                // keep SDK state as-is
+            }
+
+            // ─── wire buttons ──────────────────────────────────────
+            triggerBtn.addEventListener('click', function() {
+                if (isAdRunning) return;
+                // If SDK isn't ready, try to re‑init
+                if (typeof window.showAdsGalaxy !== 'function') {
+                    setAdState('error', 'error', 'SDK unavailable');
+                    console.warn('[AdsGalaxy] SDK not available – check network or reload.');
+                    return;
+                }
+                triggerAd();
+            });
+
+            resetBtn.addEventListener('click', function() {
+                resetUI();
+                // re‑render with a placeholder
+                renderPayload(null);
+                // if SDK is ready, show ready state
+                if (typeof window.showAdsGalaxy === 'function') {
+                    setSdkState('success', 'success', '✅ ready');
+                }
+            });
+
+            // ─── start ──────────────────────────────────────────────
+            // If the SDK somehow loads synchronously, we still handle it.
+            if (document.readyState === 'complete' || document.readyState === 'interactive') {
+                scheduleAutoTrigger();
+            } else {
+                document.addEventListener('DOMContentLoaded', scheduleAutoTrigger);
+            }
+
+            // Also handle the case where the SDK loads after DOMContentLoaded
+            // via the script's own onload (but we already poll above)
+
+            console.log('[AdsGalaxy] 🚀 Auto‑ad integration initialized (mini‑app 65)');
+
+        })();
+    </script>
+
 </body>
 </html>
